@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Успішність групи</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Успішність групи</h1>
+    <% if (role === 'admin') { %>
+      <a href="/add-student?role=<%= role %>">Додати студента</a>
+    <% } %>
+  </header>
+  <main>
+    <% if (students && students.length > 0) { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Ім'я студента</th>
+            <th>Група</th>
+            <th>Предмети та оцінки</th>
+            <% if (role === 'admin') { %>
+              <th>Дії</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% students.forEach((student, studentIndex) => { %>
+            <tr>
+              <td><%= student.firstName %> <%= student.lastName %></td>
+              <td>
+                <% student.subjects.forEach((subject, subjectIndex) => { %>
+                  <div>
+                    <strong><%= subject.subjectName %>:</strong> <%= subject.grades.join(', ') %>
+                    <% if (role === 'admin') { %>
+                      <form action="/delete-subject/<%= student._id %>/<%= subjectIndex %>?role=<%= role %>" method="POST" style="display: inline;">
+                        <button type="submit">Видалити предмет</button>
+                      </form>
+                    <% } %>
+                  </div>
+                <% }) %>
+              </td>
+              <% if (role === 'admin') { %>
+                <td>
+                  <a href="/add-subject/<%= student._id %>?role=<%= role %>">Додати предмет/оцінку</a>
+                  <a href="/edit-student/<%= student._id %>?role=<%= role %>">Редагувати</a>
+                  <form action="/delete-student/<%= student._id %>?role=<%= role %>" method="POST" style="display: inline;">
+                    <button type="submit">Видалити студента</button>
+                  </form>
+                </td>
+              <% } %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>Немає студентів для відображення.</p>
+    <% } %>
+  </main>  
+  <footer>
+    <p>Web модуль контролю успішності здобувачів вищої освіти</p>
+  </footer>
+</body>
+</html>

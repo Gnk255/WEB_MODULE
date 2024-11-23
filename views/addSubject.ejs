@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Додати предмет та оцінки</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script>
+    function validateForm() {
+      const gradesInput = document.getElementById('grades').value;
+      const gradesArray = gradesInput.split(',').map(grade => parseFloat(grade.trim()));
+      
+      for (let grade of gradesArray) {
+        if (grade > 100) {
+          alert('Оцінка не може бути більше 100');
+          return false;
+        }
+      }
+      return true;
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Додати предмет та оцінки для <%= student.fullName %></h1>
+    <a href="/">Повернутися до списку студентів</a>
+  </header>
+  <main>
+    <form action="/add-subject/<%= student._id %>" method="POST" onsubmit="return validateForm()">
+      <div>
+        <label for="subjectName">Назва предмету:</label>
+        <input type="text" id="subjectName" name="subjectName" required>
+      </div>
+      <div>
+        <label for="grades">Оцінки (через кому):</label>
+        <input type="text" id="grades" name="grades" required>
+      </div>
+      <button type="submit">Додати предмет/оцінки</button>
+    </form>
+  </main>
+  <footer>
+    <p>Web модуль контролю успішності здобувачів вищої освіти</p>
+  </footer>
+</body>
+</html>
