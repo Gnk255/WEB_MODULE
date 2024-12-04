@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Профіль студента</title>
+</head>
+<body>
+    <header class="header">Профіль студента</header>
+    
+    <main class="container">
+        <% if (student) { %>
+            <h2>Особисті дані студента</h2>
+            <div class="student-info">
+                <p>Ім'я: <%= student.firstName %> <%= student.lastName %></p>
+                <h3>Ваш предмет та оцінка:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Предмет</th>
+                            <th>Оцінка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><%= student.subject.subjectName %></td>
+                            <td>
+                                <% if (student.subject.grade !== null) { %>
+                                    <span class="<%= student.subject.grade < 50 ? 'low-grade' : '' %>"><%= student.subject.grade %></span>
+                                <% } else { %>
+                                    <span>Немає оцінок</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p>Інформація про студента не знайдена.</p>
+        <% } %>
+    </main>
+
+    <footer class="footer">
+        Система обліку успішності студентів
+    </footer>
+</body>
+</html>

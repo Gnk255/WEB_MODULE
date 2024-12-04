@@ -3,74 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Реєстрація</title>
   <link rel="stylesheet" href="/css/style.css">
+  <title>Реєстрація</title>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Реєстрація</h1>
-    </header>
-    <main>
-      <% if (error) { %>
-        <p class="error-message"><%= error %></p>
-      <% } %>
-      <form action="/register" method="POST">
-        <div>
-          <label for="username">Ім'я користувача:</label>
-          <input type="text" id="username" name="username" required>
-        </div>
-        <div>
-          <label for="password">Пароль:</label>
-          <input type="password" id="password" name="password" required>
-        </div>
-        <div>
-          <label for="role">Роль:</label>
-          <select id="role" name="role" required>
-            <option value="student">Студент</option>
-            <option value="admin">Адміністратор</option>
-          </select>
-        </div>
-        <div id="studentFields" class="hidden">
-          <label for="firstName">Ім'я:</label>
-          <input type="text" id="firstName" name="firstName">
-          <label for="lastName">Прізвище:</label>
-          <input type="text" id="lastName" name="lastName">
-          <label for="subjects">Виберіть предмети:</label>
-          <select id="subjects" name="subjects" class="select-subjects" multiple required>
-            <% availableSubjects.forEach(function(subject) { %>
-              <option value="<%= subject %>"><%= subject %></option>
-            <% }) %>
-          </select>
-        </div>
-        <button type="submit">Зареєструватися</button>
-      </form>
-      
-    </main>
-  </div>
+  <header class="header">
+    Реєстрація
+  </header>
+  <main class="container">
+    <form action="/register" method="POST" class="form">
+      <div class="form-group">
+        <label for="username">Ім'я користувача:</label>
+        <input type="text" id="username" name="username" required maxlength="50">
+      </div>
+      <div class="form-group">
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <div class="form-group">
+        <label for="role">Роль:</label>
+        <select id="role" name="role" required>
+          <option value="student">Студент</option>
+          <option value="admin">Адміністратор</option>
+        </select>
+      </div>
+      <div id="studentFields" class="form-group">
+        <label for="firstName">Ім'я:</label>
+        <input type="text" id="firstName" name="firstName">
+        
+        <label for="lastName">Прізвище:</label>
+        <input type="text" id="lastName" name="lastName">
+      </div>
+      <button type="submit" class="btn btn-primary">Зареєструватися</button>
+    </form>
+
+    <!-- Кнопка для переходу на сторінку логіну -->
+    <div class="navigation">
+      <a href="/login" class="btn btn-link">Вже маєте аккаунт? Увійти</a>
+    </div>
+  </main>
+  <footer class="footer">
+    Система обліку успішності студентів
+  </footer>
   <script>
     const roleSelect = document.getElementById('role');
     const studentFields = document.getElementById('studentFields');
-  
+
     roleSelect.addEventListener('change', function() {
       if (this.value === 'student') {
         studentFields.classList.remove('hidden');
-        // Робимо всі поля студента активними
-        studentFields.querySelectorAll('input, select').forEach(field => {
+        studentFields.querySelectorAll('input').forEach(field => {
           field.disabled = false;
         });
       } else {
         studentFields.classList.add('hidden');
-        // Відключаємо всі поля студента, коли вони приховані
-        studentFields.querySelectorAll('input, select').forEach(field => {
+        studentFields.querySelectorAll('input').forEach(field => {
           field.disabled = true;
         });
       }
     });
-  
-    // Викликаємо подію зміни, щоб встановити правильне відображення під час першого завантаження
+
     roleSelect.dispatchEvent(new Event('change'));
   </script>
-  
 </body>
 </html>

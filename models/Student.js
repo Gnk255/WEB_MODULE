@@ -19,25 +19,23 @@ const StudentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  subjects: [
-    {
-      subjectName: String,
-      grades: [Number]
-    }
-  ]
-});
-
-// Хешування пароля перед збереженням
-StudentSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
+  subject: {
+    subjectName: { type: String, default: '' },
+    grade: { type: Number, default: null }
   }
-  next();
 });
 
-// Метод для перевірки пароля
-StudentSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
-};
+// // Хешування пароля перед збереженням
+// StudentSchema.pre('save', async function(next) {
+//   if (this.isModified('password')) {
+//     this.password = await bcrypt.hash(this.password, 10);
+//   }
+//   next();
+// });
+
+// // Метод для перевірки пароля
+// StudentSchema.methods.comparePassword = async function(candidatePassword) {
+//   return bcrypt.compare(candidatePassword, this.password);
+// };
 
 module.exports = mongoose.model('Student', StudentSchema);

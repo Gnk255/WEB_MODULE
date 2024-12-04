@@ -1,66 +1,67 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Успішність групи</title>
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Успішність групи</title>
 </head>
 <body>
-  <header>
-    <h1>Успішність групи</h1>
-    <% if (role === 'admin') { %>
-      <a href="/add-student?role=<%= role %>">Додати студента</a>
-    <% } %>
-  </header>
-  <main>
-    <% if (students && students.length > 0) { %>
-      <table>
-        <thead>
-          <tr>
-            <th>Ім'я студента</th>
-            <th>Група</th>
-            <th>Предмети та оцінки</th>
-            <% if (role === 'admin') { %>
-              <th>Дії</th>
-            <% } %>
-          </tr>
-        </thead>
-        <tbody>
-          <% students.forEach((student, studentIndex) => { %>
-            <tr>
-              <td><%= student.firstName %> <%= student.lastName %></td>
-              <td>
-                <% student.subjects.forEach((subject, subjectIndex) => { %>
-                  <div>
-                    <strong><%= subject.subjectName %>:</strong> <%= subject.grades.join(', ') %>
-                    <% if (role === 'admin') { %>
-                      <form action="/delete-subject/<%= student._id %>/<%= subjectIndex %>?role=<%= role %>" method="POST" style="display: inline;">
-                        <button type="submit">Видалити предмет</button>
-                      </form>
-                    <% } %>
-                  </div>
+    <header>
+        <h1>Успішність групи</h1>
+    </header>
+
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ім'я студента</th>
+                    <th>Предмет і Оцінка</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% students.forEach(student => { %>
+                    <tr>
+                        <td><%= student.firstName %> <%= student.lastName %></td>
+                        <td>
+                            <% if (student.subject && student.subject.subjectName) { %>
+                                <div class="subject-info">
+                                    <p>Предмет: <%= student.subject.subjectName %>, Оцінка: 
+                                        <span class="<%= student.subject.grade < 50 ? 'low-grade' : '' %>">
+                                            <%= student.subject.grade != null ? student.subject.grade : 'Немає оцінки' %>
+                                        </span>
+                                    </p>
+                                </div>
+                            <% } %>
+
+                            <% if (!student.subject || !student.subject.subjectName) { %>
+                                <!-- Форма для добавления предмета и оценки, отображается если предмет еще не добавлен -->
+                                <form class="inline-form" action="/add-grade/<%= student._id %>?role=<%= role %>&username=<%= username %>" method="POST">
+                                    <input type="text" id="subjectName" name="subjectName" placeholder="Назва предмета" maxlength="40" />
+                                    <input type="number" name="grade" placeholder="Додати оцінку" min="0" max="100" required>
+                                    <button type="submit" class="btn-add-small">Додати предмет і оцінку</button>
+                                </form>
+                            <% } else { %>
+                                <!-- Кнопка удаления предмета и оценки, отображается если предмет уже добавлен -->
+                                <form action="/delete-subject/<%= student._id %>?role=<%= role %>&username=<%= username %>" method="POST">
+                                    <button type="submit" class="btn-delete">Видалити предмет і оцінку</button>
+                                </form>
+                            <% } %>
+                        </td>
+                        <td>
+                            <form action="/delete-student/<%= student._id %>?role=<%= role %>&username=<%= username %>" method="POST">
+                                <button type="submit" class="btn-delete">Видалити студента</button>
+                            </form>
+                        </td>
+                    </tr>
                 <% }) %>
-              </td>
-              <% if (role === 'admin') { %>
-                <td>
-                  <a href="/add-subject/<%= student._id %>?role=<%= role %>">Додати предмет/оцінку</a>
-                  <a href="/edit-student/<%= student._id %>?role=<%= role %>">Редагувати</a>
-                  <form action="/delete-student/<%= student._id %>?role=<%= role %>" method="POST" style="display: inline;">
-                    <button type="submit">Видалити студента</button>
-                  </form>
-                </td>
-              <% } %>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    <% } else { %>
-      <p>Немає студентів для відображення.</p>
-    <% } %>
-  </main>  
-  <footer>
-    <p>Web модуль контролю успішності здобувачів вищої освіти</p>
-  </footer>
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>Система обліку успішності студентів</p>
+    </footer>
 </body>
 </html>

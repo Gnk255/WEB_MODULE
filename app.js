@@ -25,81 +25,90 @@ app.use(express.static('public'));
 app.get('/', (req, res) => {
   res.redirect('/register');
 });
+  
+// Маршрут для студентського профілю
+app.get('/student', async (req, res) => {
+  const { username } = req.query;
 
-// Список доступних предметів для вибору студентами
-const availableSubjects = [
-    'Математика',
-    'Фізика',
-    'Хімія',
-    'Історія',
-    'Література',
-    'Програмування'
-  ];
-  
-  // Маршрут для реєстрації адміністратора та студента
-  app.get('/register', (req, res) => {
-    res.render('register', { error: null, availableSubjects });
-  });
-  
-  app.post('/register', async (req, res) => {
-    const { username, password, role, firstName, lastName, subjects } = req.body;
-  
-    try {
-      if (role === 'admin') {
-        // Перевіряємо, чи вже існує адміністратор з таким ім'ям
-        const existingAdmin = await Admin.findOne({ username });
-        if (existingAdmin) {
-          return res.render('register', { error: 'Ім\'я користувача вже використовується', availableSubjects });
-        }
-  
-        // Хешуємо пароль адміністратора
-        const hashedPassword = await bcrypt.hash(password, 10);
-  
-        // Створюємо нового адміністратора
-        const newAdmin = new Admin({ username, password: hashedPassword });
-  
-        // Зберігаємо адміністратора в базу даних
-        await newAdmin.save();
-  
-        // Перенаправляємо на сторінку логіну після успішної реєстрації
-        return res.redirect('/index');
-      } else if (role === 'student') {
-        // Перевіряємо, чи вже існує студент з таким ім'ям
-        const existingStudent = await Student.findOne({ username });
-        if (existingStudent) {
-          return res.render('index', { error: 'Ім\'я користувача вже використовується', availableSubjects });
-        }
-  
-        // Хешуємо пароль студента
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const subjectsArray = Array.isArray(subjects) ? subjects : [subjects];
-  
-        // Створюємо нового студента
-        const newStudent = new Student({
-          username,
-          password: hashedPassword,
-          firstName,
-          lastName,
-          subjects: subjectsArray.map(subject => ({ subjectName: subject, grades: [] })),
-        });
-  
-        // Зберігаємо студента в базу даних
-        await newStudent.save();
-  
-        // Перенаправляємо на сторінку логіну після успішної реєстрації
-        return res.redirect('/login');
-      } else {
-        res.render('register', { error: 'Невідома роль', availableSubjects });
-      }
-    } catch (err) {
-      console.error('Failed to register user:', err);
-      res.status(500).send('Server error');
+  try {
+    // Знаходимо студента за іменем користувача
+    const student = await Student.findOne({ username });
+    if (student) {
+      // Якщо студент знайдений, рендеримо сторінку студента
+      res.render('student', { student });
+    } else {
+      res.status(404).send('Студент не знайдений');
     }
-  });
-  
-  
-  
-// Маршрут для логіну адміністратора та студента
+  } catch (err) {
+    console.error('Failed to load student page:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+
+  // Маршрут для реєстрації адміністратора та студента
+app.get('/register', (req, res) => {
+  res.render('register', { error: null }); // Удален параметр availableSubjects
+});
+
+app.post('/register', async (req, res) => {
+  const { username, password, role, firstName, lastName } = req.body;
+
+  try {
+    if (role === 'admin') {
+      // Проверяем, существует ли администратор с таким именем пользователя
+      const existingAdmin = await Admin.findOne({ username });
+      if (existingAdmin) {
+        return res.render('register', { error: 'Ім\'я користувача вже використовується' });
+      }
+
+      // Хешируем пароль администратора
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Создаем нового администратора
+      const newAdmin = new Admin({ 
+        username, 
+        password: hashedPassword 
+      });
+
+      // Сохраняем администратора в базе данных
+      await newAdmin.save();
+
+      // Перенаправляем на страницу логина после успешной регистрации
+      return res.redirect('/index');
+    } else if (role === 'student') {
+      // Проверяем, существует ли студент с таким именем пользователя
+      const existingStudent = await Student.findOne({ username });
+      if (existingStudent) {
+        return res.render('register', { error: 'Ім\'я користувача вже використовується' });
+      }
+
+      // Хешируем пароль студента
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Создаем нового студента с пустым полем subject
+      const newStudent = new Student({
+        username,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        subject: { subjectName: '', grade: null } // Добавляем пустое поле subject
+      });
+
+      // Сохраняем студента в базе данных
+      await newStudent.save();
+
+      // Перенаправляем на страницу логина после успешной регистрации
+      return res.redirect('/login');
+    } else {
+      res.render('register', { error: 'Невідома роль' });
+    }
+  } catch (err) {
+    console.error('Failed to register user:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Маршрут для логіну адміністратора та студента
 app.get('/login', (req, res) => {
     res.render('login', { error: null });
@@ -109,82 +118,31 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
   const { username, password, role } = req.body;
 
+  console.log('Вход пользователя:', username, 'с ролью:', role);
+
   try {
     if (role === 'admin') {
       const admin = await Admin.findOne({ username });
       if (admin && await bcrypt.compare(password, admin.password)) {
-        // Перенаправляємо на головну сторінку після успішного логіну адміністратора
+        console.log('Админ найден');
         return res.redirect(`/index?role=admin&username=${username}`);
       }
     } else if (role === 'student') {
       const student = await Student.findOne({ username });
       if (student && await bcrypt.compare(password, student.password)) {
-        // Перенаправляємо на головну сторінку після успішного логіну студента
-        return res.redirect(`/?role=student&username=${username}`);
+        console.log('Студент найден');
+        return res.redirect(`/student?role=student&username=${username}`);
       }
     }
-    // Якщо дані неправильні, повертаємо сторінку з повідомленням про помилку
+    console.log('Неправильное имя пользователя или пароль');
     res.render('login', { error: 'Неправильне ім\'я користувача або пароль' });
   } catch (err) {
-    console.error('Failed to login:', err);
-    res.status(500).send('Server error');
+    console.error('Ошибка при входе:', err);
+    res.status(500).send('Ошибка сервера');
   }
 });
 
-// Маршрут для реєстрації
-app.post('/register', async (req, res) => {
-  const { username, password, role, firstName, lastName, subjects } = req.body;
 
-  try {
-    if (role === 'admin') {
-      const existingAdmin = await Admin.findOne({ username });
-      if (existingAdmin) {
-        return res.render('register', { error: 'Ім\'я користувача вже використовується', availableSubjects });
-      }
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newAdmin = new Admin({ username, password: hashedPassword });
-      await newAdmin.save();
-
-      // Перенаправляємо на головну сторінку після успішної реєстрації адміністратора
-      return res.redirect(`/?role=admin&username=${username}`);
-    } else if (role === 'student') {
-      const existingStudent = await Student.findOne({ username });
-      if (existingStudent) {
-        return res.render('register', { error: 'Ім\'я користувача вже використовується', availableSubjects });
-      }
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const subjectsArray = Array.isArray(subjects) ? subjects : [subjects];
-      const newStudent = new Student({
-        username,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        subjects: subjectsArray.map(subject => ({ subjectName: subject, grades: [] })),
-      });
-      await newStudent.save();
-
-      // Перенаправляємо на головну сторінку після успішної реєстрації студента
-      return res.redirect(`/?role=student&username=${username}`);
-    } else {
-      res.render('register', { error: 'Невідома роль', availableSubjects });
-    }
-  } catch (err) {
-    console.error('Failed to register user:', err);
-    res.status(500).send('Server error');
-  }
-});
-
-// Головна сторінка
-app.get('/', (req, res) => {
-  const { role, username } = req.query;
-
-  if (!role || !username) {
-    return res.redirect('/login');
-  }
-
-  // Рендеримо головну сторінку з відповідними параметрами ролі та іменем користувача
-  res.render('index', { role, username });
-});
 
 async function getAllStudents() {
   try {
@@ -213,6 +171,64 @@ app.get('/index', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+app.post('/delete-subject/:id', async (req, res) => {
+  const { role, username } = req.query; // Извлекаем параметры из URL
+  try {
+    // Устанавливаем поле subject в пустое значение
+    await Student.updateOne(
+      { _id: req.params.id },
+      { $set: { subject: { subjectName: '', grade: null } } }
+    );
+
+    // Перенаправляем обратно на страницу index с параметрами role и username
+    res.redirect(`/index?role=${role}&username=${username}`);
+  } catch (error) {
+    console.error('Ошибка при удалении предмета:', error);
+    res.status(500).send('Ошибка при удалении предмета');
+  }
+});
+
+
+app.post('/add-grade/:id', async (req, res) => {
+  const { role, username } = req.query; // Извлекаем параметры из URL
+  try {
+    let { subjectName, grade } = req.body;
+
+    // Преобразуем строку в число
+    grade = Number(grade);
+
+    // Проверка, что оценка не превышает 100
+    if (grade > 100) {
+      return res.status(400).send('Оцінка не може перевищувати 100');
+    }
+
+    await Student.updateOne(
+      { _id: req.params.id },
+      { $set: { subject: { subjectName: subjectName, grade: grade } } }
+    );
+
+    // Перенаправляем обратно на страницу index с параметрами role и username
+    res.redirect(`/index?role=${role}&username=${username}`);
+  } catch (error) {
+    console.error('Ошибка при добавлении оценки:', error);
+    res.status(500).send('Ошибка при добавлении оценки');
+  }
+});
+
+
+
+app.post('/delete-student/:id', async (req, res) => {
+  const { role, username } = req.query;
+  try {
+    await Student.findByIdAndDelete(req.params.id);
+    res.redirect(`/index?role=${role}&username=${username}`);
+  } catch (error) {
+    console.error('Ошибка при удалении студента:', error);
+    res.status(500).send('Ошибка при удалении студента');
+  }
+});
+
 
 const PORT = process.env.PORT || 3030;
 app.listen(PORT, () => {
